@@ -1,0 +1,39 @@
+# OS X
+.DS_Store
+# Xcode
+./build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+profile
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+# CocoaPods
+Pods
+# Intellij
+.idea/
+*.iml
+*.iws
+
+#Build files
+app/
+Package.itmsp
+compile_commands.json
+.bundle
+vendor
+
+Carthage/Checkouts
+Carthage/Build/Mac
+Carthage/Build/tvOS
+Carthage/Build/watchOS
+*.bcsymbolmap
+*.dSYM
