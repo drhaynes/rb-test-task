@@ -2,7 +2,7 @@
 
 import Foundation
 
-/// Struct that represents an object with an integer size width and height
+/// Struct that represents an area with an integer size width and height
 struct Size {
 
     /// The width of the area
@@ -12,7 +12,7 @@ struct Size {
     let height: Int32
 }
 
-/// Coordinate struct for representing integer position on a 2d rectangular grid
+/// Struct for representing integer position on a 2d rectangular grid
 struct Coordinate {
 
     /// X-axis component
@@ -27,6 +27,9 @@ struct Planet {
 
     /// The size of the plantet's 2d surface area
     let area: Size
+
+    /// Robots currently on the planet's surface
+    let robots: [Robot]
 
     /// Locations of coordinates known to be on the edge of the area
     var scentLocations: [Coordinate]
@@ -53,6 +56,18 @@ struct Robot {
 
     /// Current orientation of the robot
     var orientation: CompassOrientation
+
+    /// Current status of the robot - is it ok, or is it lost?
+    var status: Status
+}
+
+/// Status states
+///
+/// - ok: everything is ok
+/// - lost: the object has been lost
+enum Status {
+    case ok
+    case lost
 }
 
 /// Command representation
@@ -83,3 +98,5 @@ let expectedOutput = """
 3 3 N LOST
 2 3 S
 """
+
+
