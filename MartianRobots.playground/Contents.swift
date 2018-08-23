@@ -95,33 +95,54 @@ struct Robot {
     /// Instructions the robot has been programmed to execute
     let program: [Instruction]
 
-    mutating func runProgram() {
+    /// Is the robot running its program?
+    var running: Bool
+
+    mutating func runProgram(planet: Planet) -> Coordinate {
+        running = true
         program.forEach { (instruction) in
-            switch instruction {
-            case .moveForwards:
-                moveForwards()
-    // TODO: lost check
-            case .turnLeft:
-                turn(direction: .left)
-            case .turnRight:
-                turn(direction: .right)
+            if running {
+                switch instruction {
+                case .moveForwards:
+                    moveForwards(distance: 1)
+                    checkIfLost(planet: planet)
+                    if status == .lost {
+                        running = false
+                    }
+                case .turnLeft:
+                    turn(direction: .left)
+                case .turnRight:
+                    turn(direction: .right)
+                }
             }
+        }
+        running = false
+        return transform.position
+    }
+
+    private mutating func checkIfLost(planet: Planet) {
+        if (transform.position.x > planet.area.width ||
+            transform.position.x < 0 ||
+            transform.position.y > planet.area.height ||
+            transform.position.y < 0) {
+            moveForwards(distance: -1)
+            status = .lost
         }
     }
 
     /// Move the robot one unit in the currently facing direction
-    mutating func moveForwards() {
+    mutating func moveForwards(distance: Int) {
         let x = transform.position.x
         let y = transform.position.y
         switch transform.orientation {
         case .north:
-            transform.position = Coordinate(x: x, y: y + 1)
+            transform.position = Coordinate(x: x, y: y + distance)
         case .south:
-            transform.position = Coordinate(x: x, y: y - 1)
+            transform.position = Coordinate(x: x, y: y - distance)
         case .east:
-            transform.position = Coordinate(x: x + 1, y: y)
+            transform.position = Coordinate(x: x + distance, y: y)
         case .west:
-            transform.position = Coordinate(x: x - 1, y: y)
+            transform.position = Coordinate(x: x - distance, y: y)
         }
     }
 
@@ -181,7 +202,12 @@ struct Planet {
     /// Run all the planet's robots' programs
     mutating func runRobots() {
         for i in 0..<robots.endIndex {
-            robots[i].runProgram()
+
+            // Save the last known coordinate if the robot was lost
+            let lastKnownCoordinate = robots[i].runProgram(planet: self)
+            if robots[i].status == .lost {
+                scentLocations.append(lastKnownCoordinate)
+            }
         }
     }
 }
@@ -255,7 +281,7 @@ func parseRobotPositions(string: String) -> [Robot] {
             program = parseInstructions(line: line)
             if program.count > 0 {
                 if let transform = transform {
-                    robots.append(Robot(transform: transform, status: .ok, program: program))
+                    robots.append(Robot(transform: transform, status: .ok, program: program, running: false))
                 }
                 state = .position
             } else {
