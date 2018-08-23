@@ -1,4 +1,4 @@
-//: Martial Robots: Red Badger Coding Test
+//: Martian Robots: Red Badger Coding Test
 
 import Foundation
 
