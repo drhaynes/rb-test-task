@@ -194,7 +194,8 @@ struct Planet {
     func robotPositions() -> String {
         var lines = String()
         robots.forEach { (robot) in
-            lines.append("\(robot.transform.position.x) \(robot.transform.position.y) \(robot.transform.orientation.stringRepresentation())\n")
+            let lostStatus = robot.status == .lost ? "LOST" : ""
+            lines.append("\(robot.transform.position.x) \(robot.transform.position.y) \(robot.transform.orientation.stringRepresentation()) \(lostStatus)\n")
         }
         return lines
     }
