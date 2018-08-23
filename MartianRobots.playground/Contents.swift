@@ -12,12 +12,16 @@ struct Size {
 }
 
 /// Struct for representing integer position on a 2d rectangular grid
-struct Coordinate {
+struct Coordinate: Equatable {
     /// X-axis component
     let x: Int
 
     /// Y-axis component
     let y: Int
+
+    static func ==(lhs: Coordinate, rhs: Coordinate) -> Bool {
+        return lhs.x == rhs.x && lhs.y == rhs.y
+    }
 }
 
 /// Compass orientation ordinal type
@@ -126,7 +130,9 @@ struct Robot {
             transform.position.y > planet.area.height ||
             transform.position.y < 0) {
             moveForwards(distance: -1)
-            status = .lost
+            if !planet.scentLocations.contains(transform.position) {
+                status = .lost
+            }
         }
     }
 
@@ -194,8 +200,8 @@ struct Planet {
     func robotPositions() -> String {
         var lines = String()
         robots.forEach { (robot) in
-            let lostStatus = robot.status == .lost ? "LOST" : ""
-            lines.append("\(robot.transform.position.x) \(robot.transform.position.y) \(robot.transform.orientation.stringRepresentation()) \(lostStatus)\n")
+            let lostStatus = robot.status == .lost ? " LOST" : ""
+            lines.append("\(robot.transform.position.x) \(robot.transform.position.y) \(robot.transform.orientation.stringRepresentation())\(lostStatus)\n")
         }
         return lines
     }
@@ -372,7 +378,7 @@ let expectedOutput = """
 """
 
 func main() {
-    print("Reading input")
+    print("Reading input...")
     guard var planet = parseInput(input: sampleInput) else {
         print("Failed to read planet definition from inpute")
         return
@@ -380,14 +386,13 @@ func main() {
     print("Planet size: \(planet.area)")
     print("Read \(planet.robots.count) robots")
 
+    print("Running robots...\n")
     planet.runRobots()
 
     let output = planet.robotPositions()
-    print(output)
 
-    if output == expectedOutput {
-        print("Output matches expected output")
-    }
+    print("Output:")
+    print(output)
 }
 
 main()
