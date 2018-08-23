@@ -75,16 +75,85 @@ enum Instruction {
     case moveForwards
 }
 
+/// Represents a direction
+///
+/// - left: Left
+/// - right: Right
+enum Direction {
+    case left
+    case right
+}
+
 /// Robot representation
 struct Robot {
     /// The robot's current transform (position and orientation)
-    let transform: Transform
+    var transform: Transform
 
     /// Current status of the robot - is it ok, or is it lost?
     var status: Status
 
     /// Instructions the robot has been programmed to execute
     let program: [Instruction]
+
+    mutating func runProgram() {
+        program.forEach { (instruction) in
+            switch instruction {
+            case .moveForwards:
+                moveForwards()
+    // TODO: lost check
+            case .turnLeft:
+                turn(direction: .left)
+            case .turnRight:
+                turn(direction: .right)
+            }
+        }
+    }
+
+    /// Move the robot one unit in the currently facing direction
+    mutating func moveForwards() {
+        let x = transform.position.x
+        let y = transform.position.y
+        switch transform.orientation {
+        case .north:
+            transform.position = Coordinate(x: x, y: y + 1)
+        case .south:
+            transform.position = Coordinate(x: x, y: y - 1)
+        case .east:
+            transform.position = Coordinate(x: x + 1, y: y)
+        case .west:
+            transform.position = Coordinate(x: x - 1, y: y)
+        }
+    }
+
+    /// Turns the robot 90 degrees
+    ///
+    /// - Parameter direction: The direction to turn
+    mutating func turn(direction: Direction) {
+        switch direction {
+        case .left:
+            switch transform.orientation {
+            case .north:
+                transform.orientation = .west
+            case .south:
+                transform.orientation = .east
+            case .east:
+                transform.orientation = .north
+            case .west:
+                transform.orientation = .south
+            }
+        case .right:
+            switch transform.orientation {
+            case .north:
+                transform.orientation = .east
+            case .south:
+                transform.orientation = .west
+            case .east:
+                transform.orientation = .south
+            case .west:
+                transform.orientation = .north
+            }
+        }
+    }
 }
 
 /// Planet representation
@@ -93,11 +162,10 @@ struct Planet {
     let area: Size
 
     /// Robots currently on the planet's surface
-    let robots: [Robot]
+    var robots: [Robot]
 
     /// Locations of coordinates known to be on the edge of the area
     var scentLocations: [Coordinate]
-
 
     /// Output the robot positions
     ///
@@ -109,8 +177,19 @@ struct Planet {
         }
         return lines
     }
+
+    /// Run all the planet's robots' programs
+    mutating func runRobots() {
+        for i in 0..<robots.endIndex {
+            robots[i].runProgram()
+        }
+    }
 }
 
+/// Parses the input into planet definition
+///
+/// - Parameter input: Input definition string
+/// - Returns: Planet or nil if definition was invalid
 func parseInput(input: String) -> Planet? {
     let splitInput = input.split(separator: "\n", maxSplits: 1)
     guard let firstLine = splitInput.first else {
@@ -133,6 +212,10 @@ func parseInput(input: String) -> Planet? {
     return Planet(area: size, robots: robots, scentLocations: [Coordinate]())
 }
 
+/// Parse the planet size from input string
+///
+/// - Parameter string: The input string containing size definition
+/// - Returns: The size if valid, nil if not
 func parsePlanetSize(string: String) -> Size? {
     let sizeCharacters = string.split(separator: " ")
     guard let width = Int(sizeCharacters[0]), let height = Int(sizeCharacters[1]) else {
@@ -146,6 +229,10 @@ func parsePlanetSize(string: String) -> Size? {
     return Size(width: width, height: height)
 }
 
+/// Parse robot positions from input
+///
+/// - Parameter string: The robot definitions
+/// - Returns: Array of valid robots parsed from the input (note: can be empty)
 func parseRobotPositions(string: String) -> [Robot] {
     enum InputState {
         case position
@@ -180,6 +267,10 @@ func parseRobotPositions(string: String) -> [Robot] {
     return robots
 }
 
+/// Parse a transform from a string
+///
+/// - Parameter line: the string input
+/// - Returns: Transform as defined, or nil if invalid
 func parseTransform(line: String) -> Transform? {
     let elements = line.split(separator: " ")
     if elements.count < 3 {
@@ -214,6 +305,10 @@ func parseTransform(line: String) -> Transform? {
     return Transform(position: Coordinate(x: x, y: y), orientation: orientation)
 }
 
+/// Parse instructions from a string
+///
+/// - Parameter line: String containing the instructions
+/// - Returns: Array of valid instructions found
 func parseInstructions(line: String) -> [Instruction] {
     var instructions = [Instruction]()
     for (_, char) in line.enumerated() {
@@ -231,16 +326,6 @@ func parseInstructions(line: String) -> [Instruction] {
     return instructions
 }
 
-func runProgram(planet: Planet, robot: Robot) {
-
-}
-
-func runRobots(planet: Planet) {
-    planet.robots.forEach { (robot) in
-        runProgram(planet: planet, robot: robot)
-    }
-}
-
 let sampleInput = """
 5 3
 1 1 E
@@ -251,7 +336,6 @@ FRRFLLFFRRFLL
 
 0 3 W
 LLFFFLFLFL
-
 """
 
 let expectedOutput = """
@@ -262,11 +346,14 @@ let expectedOutput = """
 
 func main() {
     print("Reading input")
-    guard let planet = parseInput(input: sampleInput) else {
+    guard var planet = parseInput(input: sampleInput) else {
         print("Failed to read planet definition from inpute")
         return
     }
+    print("Planet size: \(planet.area)")
     print("Read \(planet.robots.count) robots")
+
+    planet.runRobots()
 
     let output = planet.robotPositions()
     print(output)
